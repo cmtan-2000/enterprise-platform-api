@@ -1,13 +1,21 @@
+using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterprisePlatform.Infrastructure.Persistence;
 
-public sealed class AppDbContext : DbContext
+public sealed class AppDbContext : DbContext, IApplicationDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Customer> Customers => Set<Customer>();
+
+    IQueryable<Customer> IApplicationDbContext.Customers => Customers;
+
+    public async Task AddCustomerAsync(Customer customer, CancellationToken cancellationToken)
+    {
+        await Customers.AddAsync(customer, cancellationToken);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

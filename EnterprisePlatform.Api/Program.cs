@@ -1,12 +1,8 @@
 using EnterprisePlatform.Api.Configurations;
 using Microsoft.OpenApi;
-using FluentValidation;
-using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
-using MediatR;
-using EnterprisePlatform.Application.Behaviors;
 using EnterprisePlatform.Api.Exceptions;
-using EnterprisePlatform.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using EnterprisePlatform.Infrastructure;
+using EnterprisePlatform.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,18 +27,9 @@ builder.Services
 
 builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddProblemDetails();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerValidator>();
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblyContaining<CreateCustomerCommand>();
-
-    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-});
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
 
 var app = builder.Build();
 
