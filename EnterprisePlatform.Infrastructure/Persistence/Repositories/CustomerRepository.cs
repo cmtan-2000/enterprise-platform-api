@@ -16,7 +16,6 @@ public sealed class CustomerRepository : ICustomerRepository
 	public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
 	{
 		return await _dbContext.Customers
-			.AsNoTracking()
 			.FirstOrDefaultAsync(
 				x => x.Id == id,
 				cancellationToken);
@@ -27,5 +26,12 @@ public sealed class CustomerRepository : ICustomerRepository
 		await _dbContext.Customers.AddAsync(
 			customer,
 			cancellationToken);
+	}
+
+	public void SetExpectedVersion(Customer customer, long expectedVersion)
+	{
+		_dbContext.Entry(customer)
+			.Property(x => x.Version)
+			.OriginalValue = expectedVersion;
 	}
 }

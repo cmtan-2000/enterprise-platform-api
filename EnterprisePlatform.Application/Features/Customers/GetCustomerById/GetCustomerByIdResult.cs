@@ -6,5 +6,6 @@ public sealed record GetCustomerByIdResult(
     string LastName,
     string Email,
     string PhoneNumber,
-    DateTime DateOfBirth
+    DateTime DateOfBirth,
+    long Version
 );

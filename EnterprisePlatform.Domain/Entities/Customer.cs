@@ -19,6 +19,8 @@ namespace EnterprisePlatform.Domain.Entities
 
         public DateTime DateOfBirth { get; private set; }
 
+        public long Version { get; private set; }
+
         private Customer()
         {
             // Required by EF Core
@@ -33,6 +35,20 @@ namespace EnterprisePlatform.Domain.Entities
         {
             Id = Guid.NewGuid();
 
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            PhoneNumber = phoneNumber;
+            DateOfBirth = dateOfBirth;
+        }
+
+        public void UpdateDetails(
+            string firstName,
+            string lastName,
+            string email,
+            string? phoneNumber,
+            DateTime dateOfBirth)
+        {
             FirstName = firstName;
             LastName = lastName;
             Email = email;

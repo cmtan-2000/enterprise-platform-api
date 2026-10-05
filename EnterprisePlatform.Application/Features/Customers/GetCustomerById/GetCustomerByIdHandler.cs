@@ -36,6 +36,7 @@ public sealed class GetCustomerByIdHandler
             customer.LastName,
             customer.Email,
             customer.PhoneNumber,
-            customer.DateOfBirth);
+            customer.DateOfBirth,
+            customer.Version);
     }
 }

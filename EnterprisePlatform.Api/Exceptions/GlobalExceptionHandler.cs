@@ -2,6 +2,7 @@ using EnterprisePlatform.Application.Exceptions;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EnterprisePlatform.Api.Exceptions;
 
@@ -25,7 +26,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             "An exception occurred. TraceId: {TraceId}",
             httpContext.TraceIdentifier);
 
-        var problemDetails = exception switch
+        ProblemDetails problemDetails = exception switch
         {
             ValidationException validationException
                 => CreateValidationProblem(
@@ -41,6 +42,10 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 => CreateConflictProblem(
                     httpContext,
                     conflictException),
+
+            DbUpdateConcurrencyException
+                => CreateConcurrencyProblem(
+                    httpContext),
 
             _ => CreateInternalServerError(
                 httpContext)
@@ -125,6 +130,23 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 ["code"] = "internal_server_error",
                 ["traceId"] = context.TraceIdentifier
             }
+        };
+    }
+
+    private static ProblemDetails CreateConcurrencyProblem(HttpContext context)
+    {
+        return new ProblemDetails
+        {
+            Status = StatusCodes.Status409Conflict,
+            Title = "Concurrency conflict.",
+            Type = "https://httpstatuses.com/409",
+            Detail = "The resource was modified by another request. Please retrieve the latest version and try again.",
+            Instance = context.Request.Path,
+            Extensions =
+        {
+            ["code"] = "resource.concurrency_conflict",
+            ["traceId"] = context.TraceIdentifier
+        }
         };
     }
 }

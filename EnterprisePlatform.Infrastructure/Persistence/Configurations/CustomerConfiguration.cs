@@ -38,5 +38,8 @@ public sealed class CustomerConfiguration
 
         builder.HasIndex(x => x.Email)
             .IsUnique();
+
+        builder.Property(x => x.Version)
+            .IsConcurrencyToken();
     }
 }

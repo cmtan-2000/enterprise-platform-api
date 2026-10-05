@@ -1,5 +1,6 @@
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Infrastructure.Persistence;
+using EnterprisePlatform.Infrastructure.Persistence.Interceptors;
 using EnterprisePlatform.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,12 +12,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
+        services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"));
+
+            options.AddInterceptors(serviceProvider.GetRequiredService<ConcurrencyInterceptor>());
+
         });
 
+        services.AddScoped<ConcurrencyInterceptor>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());

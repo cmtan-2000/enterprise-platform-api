@@ -11,4 +11,6 @@ public interface ICustomerRepository
 	Task AddAsync(
 		Customer customer,
 		CancellationToken cancellationToken);
+
+	void SetExpectedVersion(Customer customer, long expectedVersion);
 }
