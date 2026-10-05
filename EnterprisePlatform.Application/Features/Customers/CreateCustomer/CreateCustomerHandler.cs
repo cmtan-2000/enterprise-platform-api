@@ -7,10 +7,13 @@ namespace EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 public sealed class CreateCustomerHandler
     : IRequestHandler<CreateCustomerCommand, CreateCustomerResult>
 {
-    private readonly IApplicationDbContext _dbContext;
-    public CreateCustomerHandler(IApplicationDbContext dbContext)
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateCustomerHandler(ICustomerRepository customerRepository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _customerRepository = customerRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CreateCustomerResult> Handle(CreateCustomerCommand command, CancellationToken cancellationToken)
@@ -23,11 +26,9 @@ public sealed class CreateCustomerHandler
             command.PhoneNumber,
             command.DateOfBirth);
 
-        await _dbContext.AddCustomerAsync(
-            customer,
-            cancellationToken);
+        await _customerRepository.AddAsync(customer, cancellationToken);
 
-        await _dbContext.SaveChangesAsync(
+        await _unitOfWork.SaveChangesAsync(
             cancellationToken);
 
         return new CreateCustomerResult(

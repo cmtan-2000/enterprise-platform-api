@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EnterprisePlatform.Infrastructure.Persistence;
 
-public sealed class AppDbContext : DbContext, IApplicationDbContext
+public sealed class AppDbContext : DbContext, IApplicationDbContext, IUnitOfWork
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

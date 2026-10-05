@@ -13,9 +13,7 @@ public sealed class CustomerRepository : ICustomerRepository
 		_dbContext = dbContext;
 	}
 
-	public async Task<Customer?> GetByIdAsync(
-		Guid id,
-		CancellationToken cancellationToken)
+	public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
 	{
 		return await _dbContext.Customers
 			.AsNoTracking()
@@ -24,9 +22,7 @@ public sealed class CustomerRepository : ICustomerRepository
 				cancellationToken);
 	}
 
-	public async Task AddAsync(
-		Customer customer,
-		CancellationToken cancellationToken)
+	public async Task AddAsync(Customer customer, CancellationToken cancellationToken)
 	{
 		await _dbContext.Customers.AddAsync(
 			customer,

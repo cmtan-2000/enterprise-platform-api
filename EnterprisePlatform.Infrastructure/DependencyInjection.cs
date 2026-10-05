@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
         return services;
     }
 }
