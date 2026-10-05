@@ -23,6 +23,7 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -38,6 +39,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection();
+app.UseExceptionHandler();
 
 app.UseAuthorization();
 
