@@ -8,14 +8,11 @@ namespace EnterprisePlatform.Api.Exceptions;
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
-    private readonly IProblemDetailsService _problemDetailsService;
 
     public GlobalExceptionHandler(
-        ILogger<GlobalExceptionHandler> logger,
-        IProblemDetailsService problemDetailsService)
+        ILogger<GlobalExceptionHandler> logger)
     {
         _logger = logger;
-        _problemDetailsService = problemDetailsService;
     }
 
     public async ValueTask<bool> TryHandleAsync(
@@ -23,111 +20,111 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        _logger.LogError(
+            exception,
+            "An exception occurred. TraceId: {TraceId}",
+            httpContext.TraceIdentifier);
+
         var problemDetails = exception switch
         {
-            ValidationException validationException =>
-                CreateValidationProblem(validationException, httpContext),
+            ValidationException validationException
+                => CreateValidationProblem(
+                    httpContext,
+                    validationException),
 
-            NotFoundException notFoundException =>
-                CreateProblem(
-                    StatusCodes.Status404NotFound,
-                    "Resource not found.",
-                    notFoundException.Message,
-                    notFoundException.Code,
-                    httpContext),
+            NotFoundException notFoundException
+                => CreateNotFoundProblem(
+                    httpContext,
+                    notFoundException),
 
-            ConflictException conflictException =>
-                CreateProblem(
-                    StatusCodes.Status409Conflict,
-                    "Resource conflict.",
-                    conflictException.Message,
-                    conflictException.Code,
-                    httpContext),
+            ConflictException conflictException
+                => CreateConflictProblem(
+                    httpContext,
+                    conflictException),
 
-            _ => CreateProblem(
-                StatusCodes.Status500InternalServerError,
-                "An unexpected error occurred.",
-                null,
-                null,
+            _ => CreateInternalServerError(
                 httpContext)
         };
 
-        if (problemDetails.Status >= 500)
-        {
-            _logger.LogError(
-                exception,
-                "Unhandled exception occurred. TraceId: {TraceId}",
-                httpContext.TraceIdentifier);
-        }
-        else
-        {
-            _logger.LogWarning(
-                exception,
-                "Request failed. TraceId: {TraceId}",
-                httpContext.TraceIdentifier);
-        }
-
         httpContext.Response.StatusCode =
-            problemDetails.Status!.Value;
+            problemDetails.Status
+            ?? StatusCodes.Status500InternalServerError;
 
-        await _problemDetailsService.WriteAsync(
-            new ProblemDetailsContext
-            {
-                HttpContext = httpContext,
-                ProblemDetails = problemDetails
-            });
+        await httpContext.Response.WriteAsJsonAsync(
+            problemDetails,
+            cancellationToken);
 
         return true;
     }
 
-    private static ValidationProblemDetails CreateValidationProblem(
-        ValidationException exception,
-        HttpContext httpContext)
+    private static ProblemDetails CreateValidationProblem(HttpContext context, ValidationException exception)
     {
         var errors = exception.Errors
-            .GroupBy(error => error.PropertyName)
+            .GroupBy(x => x.PropertyName)
             .ToDictionary(
                 group => group.Key,
                 group => group
-                    .Select(error => error.ErrorMessage)
+                    .Select(x => x.ErrorMessage)
                     .ToArray());
 
-        var problem = new ValidationProblemDetails(errors)
+        return new ProblemDetails
         {
             Status = StatusCodes.Status400BadRequest,
-            Title = "One or more validation errors occurred.",
-            Instance = httpContext.Request.Path
+            Title = "Validation failed.",
+            Type = "https://httpstatuses.com/400",
+            Extensions =
+            {
+                ["code"] = "validation.failed",
+                ["traceId"] = context.TraceIdentifier,
+                ["errors"] = errors
+            }
         };
-
-        problem.Extensions["traceId"] =
-            httpContext.TraceIdentifier;
-
-        return problem;
     }
 
-    private static ProblemDetails CreateProblem(
-        int status,
-        string title,
-        string? detail,
-        string? code,
-        HttpContext httpContext)
+    private static ProblemDetails CreateNotFoundProblem(HttpContext context, NotFoundException exception)
     {
-        var problem = new ProblemDetails
+        return new ProblemDetails
         {
-            Status = status,
-            Title = title,
-            Detail = detail,
-            Instance = httpContext.Request.Path
+            Status = StatusCodes.Status404NotFound,
+            Title = "Resource not found.",
+            Type = "https://httpstatuses.com/404",
+            Detail = exception.Message,
+            Extensions =
+            {
+                ["code"] = "resource.not_found",
+                ["traceId"] = context.TraceIdentifier
+            }
         };
+    }
 
-        problem.Extensions["traceId"] =
-            httpContext.TraceIdentifier;
-
-        if (code is not null)
+    private static ProblemDetails CreateConflictProblem(HttpContext context, ConflictException exception)
+    {
+        return new ProblemDetails
         {
-            problem.Extensions["code"] = code;
-        }
+            Status = StatusCodes.Status409Conflict,
+            Title = "Conflict occurred.",
+            Type = "https://httpstatuses.com/409",
+            Detail = exception.Message,
+            Extensions =
+            {
+                ["code"] = "resource.conflict",
+                ["traceId"] = context.TraceIdentifier
+            }
+        };
+    }
 
-        return problem;
+    private static ProblemDetails CreateInternalServerError(HttpContext context)
+    {
+        return new ProblemDetails
+        {
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "An unexpected error occurred.",
+            Type = "https://httpstatuses.com/500",
+            Extensions =
+            {
+                ["code"] = "internal_server_error",
+                ["traceId"] = context.TraceIdentifier
+            }
+        };
     }
 }

@@ -1,9 +1,17 @@
 namespace EnterprisePlatform.Application.Exceptions;
 
-public sealed class NotFoundException : AppException
+public sealed class NotFoundException : Exception
 {
-    public NotFoundException(string resource, object key)
-    : base($"{resource} with identifier '{key}' was not found.", $"{resource.ToLowerInvariant()}.not_found")
+    public string Resource { get; }
+
+    public object Key { get; }
+
+    public NotFoundException(
+        string resource,
+        object key)
+        : base($"{resource} with key '{key}' was not found.")
     {
+        Resource = resource;
+        Key = key;
     }
 }
