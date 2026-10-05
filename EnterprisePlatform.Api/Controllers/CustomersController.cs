@@ -1,4 +1,5 @@
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
+using EnterprisePlatform.Application.Features.Customers.GetCustomerById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,16 @@ namespace EnterprisePlatform.Api.Controllers
         {
             var result = await _sender.Send(command, cancellationToken);
             return Created($"/api/customers/{result.Id}", result);
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<GetCustomerByIdResult>> GetById(Guid id, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(
+                new GetCustomerByIdQuery(id),
+                cancellationToken);
+
+            return Ok(result);
         }
     }
 }

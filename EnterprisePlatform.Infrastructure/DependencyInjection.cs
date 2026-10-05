@@ -1,5 +1,6 @@
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Infrastructure.Persistence;
+using EnterprisePlatform.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,9 +17,8 @@ public static class DependencyInjection
                 configuration.GetConnectionString("DefaultConnection"));
         });
 
-        services.AddScoped<IApplicationDbContext>(
-            provider => provider.GetRequiredService<AppDbContext>());
-
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
         return services;
     }
 }
