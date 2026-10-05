@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="EnterprisePlatform.Api/EnterprisePlatform.Api.csproj" />
+  <Project Path="EnterprisePlatform.Application/EnterprisePlatform.Application.csproj" />
+  <Project Path="EnterprisePlatform.Domain/EnterprisePlatform.Domain.csproj" />
+  <Project Path="EnterprisePlatform.Infrastructure/EnterprisePlatform.Infrastructure.csproj" />
+  <Project Path="EnterprisePlatform.IntegrationTests/EnterprisePlatform.IntegrationTests.csproj" />
+  <Project Path="EnterprisePlatform.UnitTests/EnterprisePlatform.UnitTests.csproj" />
+</Solution>

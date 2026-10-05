@@ -1,0 +1,15 @@
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\bin\Debug\net10.0\EnterprisePlatform.Application.deps.json
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\bin\Debug\net10.0\EnterprisePlatform.Application.dll
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\bin\Debug\net10.0\EnterprisePlatform.Application.pdb
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\bin\Debug\net10.0\EnterprisePlatform.Domain.dll
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\bin\Debug\net10.0\EnterprisePlatform.Domain.pdb
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.csproj.AssemblyReference.cache
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.AssemblyInfoInputs.cache
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.AssemblyInfo.cs
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.csproj.CoreCompileInputs.cache
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\Enterpri.9E84232F.Up2Date
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.dll
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\refint\EnterprisePlatform.Application.dll
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\EnterprisePlatform.Application.pdb
+D:\Coding\.NET\EnterprisePlatform\EnterprisePlatform.Application\obj\Debug\net10.0\ref\EnterprisePlatform.Application.dll
