@@ -1,3 +1,4 @@
+using EnterprisePlatform.Api.Configurations;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,11 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enterprise-grade ASP.NET Core backend"
     });
 });
+
+builder.Services
+    .AddOptions<ApplicationSettings>()
+    .Bind(builder.Configuration.GetSection("Application"))
+    .ValidateOnStart();
 
 builder.Services.AddHealthChecks();
 
