@@ -3,6 +3,8 @@ using Microsoft.OpenApi;
 using FluentValidation;
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 using MediatR;
+using EnterprisePlatform.Application.Behaviors;
+using EnterprisePlatform.Api.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,11 +28,14 @@ builder.Services
     .ValidateOnStart();
 
 builder.Services.AddHealthChecks();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerValidator>();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblyContaining<CreateCustomerCommand>();
+
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
 var app = builder.Build();
