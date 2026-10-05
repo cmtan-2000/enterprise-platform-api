@@ -1,5 +1,8 @@
 using EnterprisePlatform.Api.Configurations;
 using Microsoft.OpenApi;
+using FluentValidation;
+using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
+using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,11 @@ builder.Services
 
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateCustomerValidator>();
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<CreateCustomerCommand>();
+});
 
 var app = builder.Build();
 
