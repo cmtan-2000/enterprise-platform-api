@@ -41,5 +41,13 @@ public sealed class CustomerConfiguration
 
         builder.Property(x => x.Version)
             .IsConcurrencyToken();
+
+        builder.HasIndex(x => new
+        {
+            x.CreatedAt,
+            x.Id
+        })
+        .IsDescending(true, true)
+        .HasDatabaseName("IX_customers_CreatedAt_Id");
     }
 }

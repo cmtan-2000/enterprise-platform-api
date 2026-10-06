@@ -1,4 +1,5 @@
 namespace EnterprisePlatform.Application.Features.Customers.GetCustomers;
 
 public sealed record CustomerCursor(
-    string Email);
+    DateTime CreatedAt,
+    Guid Id);

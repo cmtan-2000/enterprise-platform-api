@@ -20,6 +20,7 @@ namespace EnterprisePlatform.Domain.Entities
         public DateTime DateOfBirth { get; private set; }
 
         public long Version { get; private set; }
+        public DateTime CreatedAt { get; private set; }
 
         private Customer()
         {
@@ -40,6 +41,7 @@ namespace EnterprisePlatform.Domain.Entities
             Email = email;
             PhoneNumber = phoneNumber;
             DateOfBirth = dateOfBirth;
+            this.CreatedAt = DateTime.UtcNow;
         }
 
         public void UpdateDetails(

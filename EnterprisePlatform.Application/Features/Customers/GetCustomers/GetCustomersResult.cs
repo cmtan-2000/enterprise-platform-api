@@ -9,4 +9,5 @@ public sealed record CustomerListItem(
     Guid Id,
     string FirstName,
     string LastName,
-    string Email);
+    string Email,
+    DateTime CreatedAt);

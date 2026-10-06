@@ -34,17 +34,21 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
 
             if (cursor is not null)
             {
-                query = query.Where(x => string.Compare(x.Email, cursor.Email) > 0);
+                query = query.Where(x =>
+                    x.CreatedAt < cursor.CreatedAt || (x.CreatedAt == cursor.CreatedAt
+                    && x.Id.CompareTo(cursor.Id) < 0));
             }
 
             var items = await query
-                .OrderBy(x => x.Email)
+                .OrderByDescending(x => x.CreatedAt)
+                .ThenByDescending(x => x.Id)
                 .Take(request.PageSize + 1)
                 .Select(x => new CustomerListItem(
                     x.Id,
                     x.FirstName,
                     x.LastName,
-                    x.Email))
+                    x.Email,
+                    x.CreatedAt))
                 .ToListAsync(cancellationToken);
 
             var hasNextPage = items.Count > request.PageSize;
@@ -55,7 +59,7 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
 
             var nextCursor = hasNextPage
                 ? _cursorSerializer.Encode(
-                    new CustomerCursor(pageItems[^1].Email))
+                    new CustomerCursor(pageItems[^1].CreatedAt, pageItems[^1].Id))
                 : null;
 
             return new GetCustomersResult(
