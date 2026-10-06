@@ -1,4 +1,6 @@
+using EnterprisePlatform.Application.Abstractions.Pagination;
 using EnterprisePlatform.Application.Abstractions.Persistence;
+using EnterprisePlatform.Infrastructure.Pagination;
 using EnterprisePlatform.Infrastructure.Persistence;
 using EnterprisePlatform.Infrastructure.Persistence.Interceptors;
 using EnterprisePlatform.Infrastructure.Persistence.Queries;
@@ -37,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICustomerQueries, CustomerQueries>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
+        services.AddSingleton<ICursorSerializer, CursorSerializer>();
+
         return services;
     }
 }

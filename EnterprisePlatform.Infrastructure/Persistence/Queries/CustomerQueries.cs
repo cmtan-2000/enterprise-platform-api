@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EnterprisePlatform.Application.Abstractions.Pagination;
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Application.Features.Customers.GetCustomers;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,12 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
     public class CustomerQueries : ICustomerQueries
     {
         private readonly AppDbContext _dbContext;
+        private readonly ICursorSerializer _cursorSerializer;
 
-        public CustomerQueries(AppDbContext dbContext)
+        public CustomerQueries(AppDbContext dbContext, ICursorSerializer cursorSerializer)
         {
             _dbContext = dbContext;
+            _cursorSerializer = cursorSerializer;
         }
 
         public async Task<GetCustomersResult> GetCustomersAsync(GetCustomersQuery request, CancellationToken cancellationToken)
@@ -22,67 +25,21 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
             var query = _dbContext.Customers
                 .AsNoTracking();
 
-            // Search
-            if (!string.IsNullOrWhiteSpace(request.Search))
+            // Cursor
+            CustomerCursor? cursor = null;
+            if (!string.IsNullOrWhiteSpace(request.Cursor))
             {
-                var search = request.Search.Trim();
-
-                query = query.Where(x =>
-                    EF.Functions.ILike(x.FirstName, $"%{search}%") ||
-                    EF.Functions.ILike(x.LastName, $"%{search}%") ||
-                    EF.Functions.ILike(x.Email, $"%{search}%"));
+                cursor = _cursorSerializer.Decode<CustomerCursor>(request.Cursor);
             }
 
-            // Count
-            var totalCount = await query.CountAsync(
-                cancellationToken);
-
-            // Sort
-            query = request.SortBy?.ToLowerInvariant() switch
+            if (cursor is not null)
             {
-                "firstname" => request.SortDirection == "desc"
-                    ? query
-                        .OrderByDescending(x => x.FirstName)
-                        .ThenBy(x => x.Id)
-                    : query
-                        .OrderBy(x => x.FirstName)
-                        .ThenBy(x => x.Id),
-
-                "lastname" => request.SortDirection == "desc"
-                    ? query
-                        .OrderByDescending(x => x.LastName)
-                        .ThenBy(x => x.Id)
-                    : query
-                        .OrderBy(x => x.LastName)
-                        .ThenBy(x => x.Id),
-
-                "email" => request.SortDirection == "desc"
-                    ? query
-                        .OrderByDescending(x => x.Email)
-                        .ThenBy(x => x.Id)
-                    : query
-                        .OrderBy(x => x.Email)
-                        .ThenBy(x => x.Id),
-
-                "dateofbirth" => request.SortDirection == "desc"
-                    ? query
-                        .OrderByDescending(x => x.DateOfBirth)
-                        .ThenBy(x => x.Id)
-                    : query
-                        .OrderBy(x => x.DateOfBirth)
-                        .ThenBy(x => x.Id),
-
-                _ => query
-                    .OrderBy(x => x.FirstName)
-                    .ThenBy(x => x.Id)
-            };
-
-            // Pagination
-            var skip = (request.Page - 1) * request.PageSize;
+                query = query.Where(x => string.Compare(x.Email, cursor.Email) > 0);
+            }
 
             var items = await query
-                .Skip(skip)
-                .Take(request.PageSize)
+                .OrderBy(x => x.Email)
+                .Take(request.PageSize + 1)
                 .Select(x => new CustomerListItem(
                     x.Id,
                     x.FirstName,
@@ -90,15 +47,22 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
                     x.Email))
                 .ToListAsync(cancellationToken);
 
-            var totalPages = (int)Math.Ceiling(
-                totalCount / (double)request.PageSize);
+            var hasNextPage = items.Count > request.PageSize;
+
+            var pageItems = hasNextPage
+                ? items.Take(request.PageSize).ToList()
+                : items;
+
+            var nextCursor = hasNextPage
+                ? _cursorSerializer.Encode(
+                    new CustomerCursor(pageItems[^1].Email))
+                : null;
 
             return new GetCustomersResult(
-                items,
-                request.Page,
+                pageItems,
                 request.PageSize,
-                totalCount,
-                totalPages);
+                nextCursor
+            );
         }
 
     }

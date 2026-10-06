@@ -2,10 +2,8 @@ namespace EnterprisePlatform.Application.Features.Customers.GetCustomers;
 
 public sealed record GetCustomersResult(
     IReadOnlyList<CustomerListItem> Items,
-    int Page,
     int PageSize,
-    int TotalCount,
-    int TotalPages);
+    string? NextCursor);
 
 public sealed record CustomerListItem(
     Guid Id,

@@ -17,7 +17,7 @@ public sealed class GetCustomersHandler : IRequestHandler<GetCustomersQuery, Get
         CancellationToken cancellationToken)
     {
         return await _customerQueries.GetCustomersAsync(
-    request,
-    cancellationToken);
+        request,
+        cancellationToken);
     }
 }

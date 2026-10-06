@@ -15,19 +15,8 @@ public sealed class GetCustomersValidator
 
     public GetCustomersValidator()
     {
-        RuleFor(x => x.Page)
-            .GreaterThanOrEqualTo(1);
-
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 100);
-
-        RuleFor(x => x.SortDirection)
-            .Must(BeValidSortDirection)
-            .When(x => !string.IsNullOrWhiteSpace(x.SortDirection));
-
-        RuleFor(x => x.SortBy)
-            .Must(BeValidSortField)
-            .When(x => !string.IsNullOrWhiteSpace(x.SortBy));
     }
 
     private static bool BeValidSortDirection(
