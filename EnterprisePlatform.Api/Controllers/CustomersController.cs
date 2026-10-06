@@ -1,5 +1,6 @@
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 using EnterprisePlatform.Application.Features.Customers.GetCustomerById;
+using EnterprisePlatform.Application.Features.Customers.GetCustomers;
 using EnterprisePlatform.Application.Features.Customers.UpdateCustomer;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -74,6 +75,16 @@ namespace EnterprisePlatform.Api.Controllers
             Response.Headers.ETag = $"\"{newVersion}\"";
 
             return NoContent();
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<GetCustomersResult>> GetCustomers([FromQuery] GetCustomersQuery query, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(
+                query,
+                cancellationToken);
+
+            return Ok(result);
         }
     }
 }

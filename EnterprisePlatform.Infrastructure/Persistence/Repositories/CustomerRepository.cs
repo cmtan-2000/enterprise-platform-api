@@ -13,6 +13,11 @@ public sealed class CustomerRepository : ICustomerRepository
 		_dbContext = dbContext;
 	}
 
+	public IQueryable<Customer> Query()
+	{
+		return _dbContext.Customers;
+	}
+
 	public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
 	{
 		return await _dbContext.Customers
