@@ -9,7 +9,6 @@ public sealed class Address
     public string City { get; private set; } = null!;
 
     public Customer Customer { get; private set; } = null!;
-    public ICollection<Address> Addresses { get; private set; } = new List<Address>();
 
     private Address()
     {
