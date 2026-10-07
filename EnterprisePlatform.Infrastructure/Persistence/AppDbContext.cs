@@ -9,6 +9,8 @@ public sealed class AppDbContext : DbContext, IApplicationDbContext, IUnitOfWork
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Address> Addresses => Set<Address>();
 
     IQueryable<Customer> IApplicationDbContext.Customers => Customers;
 

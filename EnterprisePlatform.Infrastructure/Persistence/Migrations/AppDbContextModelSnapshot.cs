@@ -22,6 +22,32 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Address", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AddressId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddressId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("addresses", (string)null);
+                });
+
             modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -67,6 +93,67 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_customers_CreatedAt_Id");
 
                     b.ToTable("customers", (string)null);
+                });
+
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "CreatedAt");
+
+                    b.ToTable("orders", (string)null);
+                });
+
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Address", b =>
+                {
+                    b.HasOne("EnterprisePlatform.Domain.Entities.Address", null)
+                        .WithMany("Addresses")
+                        .HasForeignKey("AddressId");
+
+                    b.HasOne("EnterprisePlatform.Domain.Entities.Customer", "Customer")
+                        .WithMany("Addresses")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("EnterprisePlatform.Domain.Entities.Customer", "Customer")
+                        .WithMany("Orders")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Address", b =>
+                {
+                    b.Navigation("Addresses");
+                });
+
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Customer", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EnterprisePlatform.Application.Abstractions.Pagination;
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Application.Features.Customers.GetCustomers;
+using EnterprisePlatform.Application.Features.Customers.GetCustomerSummary;
 using Microsoft.EntityFrameworkCore;
 
 namespace EnterprisePlatform.Infrastructure.Persistence.Queries
@@ -68,6 +69,20 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
                 nextCursor
             );
         }
+        public async Task TestNPlusOneAsync(CancellationToken cancellationToken)
+        {
+            var customers = await _dbContext.Customers
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .Take(10)
+                .Select(x => new CustomerSummaryDto(
+                    x.Id,
+                    x.FirstName,
+                    x.LastName,
+                    x.Orders.Count,
+                    x.Addresses.Count))
+                .ToListAsync(cancellationToken);
 
+        }
     }
 }

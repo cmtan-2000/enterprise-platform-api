@@ -21,6 +21,8 @@ namespace EnterprisePlatform.Domain.Entities
 
         public long Version { get; private set; }
         public DateTime CreatedAt { get; private set; }
+        public ICollection<Order> Orders { get; private set; } = new List<Order>();
+        public ICollection<Address> Addresses { get; private set; } = new List<Address>();
 
         private Customer()
         {

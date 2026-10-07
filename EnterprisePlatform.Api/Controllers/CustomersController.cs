@@ -1,3 +1,4 @@
+using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 using EnterprisePlatform.Application.Features.Customers.GetCustomerById;
 using EnterprisePlatform.Application.Features.Customers.GetCustomers;
@@ -12,10 +13,11 @@ namespace EnterprisePlatform.Api.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ISender _sender;
-
-        public CustomersController(ISender sender)
+        private readonly ICustomerQueries _customerQueries;
+        public CustomersController(ISender sender, ICustomerQueries customerQueries)
         {
             _sender = sender;
+            _customerQueries = customerQueries;
         }
 
         [HttpPost]
@@ -85,6 +87,15 @@ namespace EnterprisePlatform.Api.Controllers
                 cancellationToken);
 
             return Ok(result);
+        }
+
+        [HttpGet("test-n-plus-one")]
+        public async Task<IActionResult> TestNPlusOne(CancellationToken cancellationToken)
+        {
+            await _customerQueries.TestNPlusOneAsync(
+                cancellationToken);
+
+            return Ok();
         }
     }
 }
