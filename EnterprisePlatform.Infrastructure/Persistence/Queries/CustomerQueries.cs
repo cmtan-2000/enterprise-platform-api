@@ -71,18 +71,23 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Queries
         }
         public async Task TestNPlusOneAsync(CancellationToken cancellationToken)
         {
-            var customers = await _dbContext.Customers
-                .AsNoTracking()
-                .OrderBy(x => x.Id)
-                .Take(10)
-                .Select(x => new CustomerSummaryDto(
-                    x.Id,
-                    x.FirstName,
-                    x.LastName,
-                    x.Orders.Count,
-                    x.Addresses.Count))
-                .ToListAsync(cancellationToken);
+            // var customers = await _dbContext.Customers
+            //     .AsNoTracking()
+            //     .OrderBy(x => x.Id)
+            //     .Take(10)
+            //     .Select(x => new CustomerSummaryDto(
+            //         x.Id,
+            //         x.FirstName,
+            //         x.LastName,
+            //         x.Orders.Count,
+            //         x.Addresses.Count))
+            //     .ToListAsync(cancellationToken);
 
+            var customers = await _dbContext.Customers
+                .AsNoTrackingWithIdentityResolution()
+                .Include(x => x.Orders)
+                .Include(x => x.Addresses)
+                .ToListAsync(cancellationToken);
         }
     }
 }
