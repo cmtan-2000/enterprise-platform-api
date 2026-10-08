@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace EnterprisePlatform.Infrastructure;
 
@@ -16,10 +17,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+
+        Console.WriteLine(
+            $"Npgsql Maximum Pool Size = {builder.MaxPoolSize}");
+
         services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         {
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(connectionString);
 
             options.AddInterceptors(serviceProvider.GetRequiredService<ConcurrencyInterceptor>());
 
@@ -33,6 +39,7 @@ public static class DependencyInjection
             }
             options.EnableSensitiveDataLogging();
         });
+
 
         services.AddScoped<ConcurrencyInterceptor>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
