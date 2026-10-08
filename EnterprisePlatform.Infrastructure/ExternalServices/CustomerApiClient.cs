@@ -22,8 +22,7 @@ namespace EnterprisePlatform.Infrastructure.ExternalServices
                     $"/api/customers/external-simulation/{customerId}",
                     cancellationToken);
             }
-            catch (TaskCanceledException ex)
-            when (!cancellationToken.IsCancellationRequested)
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 throw new DownstreamTimeoutException("Customer API request timed out.", ex);
             }

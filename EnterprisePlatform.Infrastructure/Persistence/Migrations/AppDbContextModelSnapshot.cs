@@ -28,9 +28,6 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AddressId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -40,8 +37,6 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AddressId");
 
                     b.HasIndex("CustomerId");
 
@@ -95,6 +90,24 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
                     b.ToTable("customers", (string)null);
                 });
 
+            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.IdempotencyRecord", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Key")
+                        .HasName("PK_idempotency_records");
+
+                    b.ToTable("idempotencyrecords", (string)null);
+                });
+
             modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -120,10 +133,6 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Address", b =>
                 {
-                    b.HasOne("EnterprisePlatform.Domain.Entities.Address", null)
-                        .WithMany("Addresses")
-                        .HasForeignKey("AddressId");
-
                     b.HasOne("EnterprisePlatform.Domain.Entities.Customer", "Customer")
                         .WithMany("Addresses")
                         .HasForeignKey("CustomerId")
@@ -142,11 +151,6 @@ namespace EnterprisePlatform.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Address", b =>
-                {
-                    b.Navigation("Addresses");
                 });
 
             modelBuilder.Entity("EnterprisePlatform.Domain.Entities.Customer", b =>

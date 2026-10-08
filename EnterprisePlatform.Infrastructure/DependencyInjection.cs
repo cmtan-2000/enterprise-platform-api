@@ -13,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using Npgsql;
+using Polly;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace EnterprisePlatform.Infrastructure;
 
@@ -46,7 +48,11 @@ public static class DependencyInjection
 
         services.AddScoped<ConcurrencyInterceptor>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
+
         services.AddScoped<ICustomerQueries, CustomerQueries>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
         services.AddScoped<IExternalApiClient, FakeExternalApiClient>();
@@ -57,6 +63,16 @@ public static class DependencyInjection
                     new Uri(configuration["ExternalApis:CustomerApi"]!);
 
                 client.Timeout = TimeSpan.FromSeconds(5);
+            }).AddResilienceHandler("CustomerApiRetry",
+            builder =>
+            {
+                builder.AddRetry(new HttpRetryStrategyOptions
+                {
+                    MaxRetryAttempts = 3,
+                    BackoffType = DelayBackoffType.Exponential,
+                    Delay = TimeSpan.FromMilliseconds(200),
+                    UseJitter = true
+                });
             });
 
         services.AddSingleton<ICursorSerializer, CursorSerializer>();

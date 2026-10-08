@@ -1,9 +1,12 @@
+using System.Collections.Concurrent;
+using EnterprisePlatform.Api.DTOs.Orders;
 using EnterprisePlatform.Application.Abstractions.ExternalServices;
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 using EnterprisePlatform.Application.Features.Customers.GetCustomerById;
 using EnterprisePlatform.Application.Features.Customers.GetCustomers;
 using EnterprisePlatform.Application.Features.Customers.UpdateCustomer;
+using EnterprisePlatform.Application.Features.Orders.CreateOrder;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +18,8 @@ namespace EnterprisePlatform.Api.Controllers
     {
         private readonly ISender _sender;
         private readonly ICustomerQueries _customerQueries;
+        private static readonly ConcurrentDictionary<Guid, int> Attempts = new();
+
         public CustomersController(ISender sender, ICustomerQueries customerQueries)
         {
             _sender = sender;
@@ -102,15 +107,47 @@ namespace EnterprisePlatform.Api.Controllers
         [HttpGet("external-simulation/{customerId:guid}")]
         public async Task<IActionResult> ExternalSimulation(Guid customerId, CancellationToken cancellationToken)
         {
-            await Task.Delay(
-                TimeSpan.FromSeconds(10),
-                cancellationToken);
+            var attempt = Attempts.AddOrUpdate(customerId, 1, (_, current) => current + 1);
+
+            Console.WriteLine($"External API attempt: {attempt}");
+
+            if (attempt <= 2)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            Attempts.TryRemove(customerId, out _);
 
             return Ok(new CustomerProfileDto(
                 customerId,
                 "John",
                 "Doe",
                 "john@example.com"));
+        }
+
+        [HttpPost("orders")]
+        public async Task<IActionResult> CreateOrder([FromHeader(Name = "Idempotency-Key")] string? idempotencyKey, CreateOrderRequest request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(idempotencyKey))
+            {
+                return BadRequest(new
+                {
+                    code = "idempotency_key.required",
+                    message = "Idempotency-Key is required."
+                });
+            }
+
+            var orderId = await _sender.Send(
+                new CreateOrderCommand(
+                    request.CustomerId,
+                    request.Amount,
+                    idempotencyKey),
+                cancellationToken);
+
+            return Ok(new
+            {
+                orderId
+            });
         }
     }
 }
