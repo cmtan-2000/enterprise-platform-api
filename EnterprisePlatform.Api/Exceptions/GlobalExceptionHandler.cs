@@ -47,6 +47,11 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 => CreateConcurrencyProblem(
                     httpContext),
 
+            DownstreamTimeoutException downstreamTimeoutException
+                => CreateDownstreamTimeoutException(
+                    httpContext,
+                    downstreamTimeoutException),
+
             _ => CreateInternalServerError(
                 httpContext)
         };
@@ -143,10 +148,27 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             Detail = "The resource was modified by another request. Please retrieve the latest version and try again.",
             Instance = context.Request.Path,
             Extensions =
+            {
+                ["code"] = "resource.concurrency_conflict",
+                ["traceId"] = context.TraceIdentifier
+            }
+        };
+    }
+
+    private static ProblemDetails CreateDownstreamTimeoutException(HttpContext context, DownstreamTimeoutException ex)
+    {
+        return new ProblemDetails
         {
-            ["code"] = "resource.concurrency_conflict",
-            ["traceId"] = context.TraceIdentifier
-        }
+            Status = StatusCodes.Status504GatewayTimeout,
+            Title = "Gateway Timeout",
+            Type = "https://httpstatuses.com/504",
+            Detail = ex.Message,
+            Instance = context.Request.Path,
+            Extensions =
+            {
+                ["code"] = "downstream.timeout",
+                ["traceId"] = context.TraceIdentifier
+            }
         };
     }
 }

@@ -1,5 +1,7 @@
+using EnterprisePlatform.Application.Abstractions.ExternalServices;
 using EnterprisePlatform.Application.Abstractions.Pagination;
 using EnterprisePlatform.Application.Abstractions.Persistence;
+using EnterprisePlatform.Infrastructure.ExternalServices;
 using EnterprisePlatform.Infrastructure.Pagination;
 using EnterprisePlatform.Infrastructure.Persistence;
 using EnterprisePlatform.Infrastructure.Persistence.Interceptors;
@@ -9,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Json;
 using Npgsql;
 
 namespace EnterprisePlatform.Infrastructure;
@@ -46,6 +49,16 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICustomerQueries, CustomerQueries>();
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
+        services.AddScoped<IExternalApiClient, FakeExternalApiClient>();
+        services.AddHttpClient<ICustomerApiClient, CustomerApiClient>(
+            client =>
+            {
+                client.BaseAddress =
+                    new Uri(configuration["ExternalApis:CustomerApi"]!);
+
+                client.Timeout = TimeSpan.FromSeconds(5);
+            });
+
         services.AddSingleton<ICursorSerializer, CursorSerializer>();
 
         return services;

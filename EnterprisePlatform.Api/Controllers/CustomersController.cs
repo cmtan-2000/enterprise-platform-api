@@ -1,3 +1,4 @@
+using EnterprisePlatform.Application.Abstractions.ExternalServices;
 using EnterprisePlatform.Application.Abstractions.Persistence;
 using EnterprisePlatform.Application.Features.Customers.CreateCustomer;
 using EnterprisePlatform.Application.Features.Customers.GetCustomerById;
@@ -96,6 +97,20 @@ namespace EnterprisePlatform.Api.Controllers
                 cancellationToken);
 
             return Ok();
+        }
+
+        [HttpGet("external-simulation/{customerId:guid}")]
+        public async Task<IActionResult> ExternalSimulation(Guid customerId, CancellationToken cancellationToken)
+        {
+            await Task.Delay(
+                TimeSpan.FromSeconds(10),
+                cancellationToken);
+
+            return Ok(new CustomerProfileDto(
+                customerId,
+                "John",
+                "Doe",
+                "john@example.com"));
         }
     }
 }
