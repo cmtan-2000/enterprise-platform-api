@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Polly.CircuitBreaker;
 
 namespace EnterprisePlatform.Api.Exceptions;
 
@@ -51,6 +52,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 => CreateDownstreamTimeoutException(
                     httpContext,
                     downstreamTimeoutException),
+
+            BrokenCircuitException
+                => CreateCircuitBreakerProblem(httpContext),
 
             _ => CreateInternalServerError(
                 httpContext)
@@ -169,6 +173,23 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 ["code"] = "downstream.timeout",
                 ["traceId"] = context.TraceIdentifier
             }
+        };
+    }
+
+    private static ProblemDetails CreateCircuitBreakerProblem(HttpContext context)
+    {
+        return new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "Service temporarily unavailable.",
+            Type = "https://httpstatuses.com/503",
+            Detail = "The downstream service is temporarily unavailable. Please try again later.",
+            Instance = context.Request.Path,
+            Extensions =
+        {
+            ["code"] = "downstream.circuit_open",
+            ["traceId"] = context.TraceIdentifier
+        }
         };
     }
 }

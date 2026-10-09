@@ -107,6 +107,11 @@ namespace EnterprisePlatform.Api.Controllers
         [HttpGet("external-simulation/{customerId:guid}")]
         public async Task<IActionResult> ExternalSimulation(Guid customerId, CancellationToken cancellationToken)
         {
+            Console.WriteLine("External API called.");
+
+            return StatusCode(
+                StatusCodes.Status503ServiceUnavailable);
+
             var attempt = Attempts.AddOrUpdate(customerId, 1, (_, current) => current + 1);
 
             Console.WriteLine($"External API attempt: {attempt}");

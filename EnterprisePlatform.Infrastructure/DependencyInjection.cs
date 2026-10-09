@@ -63,8 +63,7 @@ public static class DependencyInjection
                     new Uri(configuration["ExternalApis:CustomerApi"]!);
 
                 client.Timeout = TimeSpan.FromSeconds(5);
-            }).AddResilienceHandler("CustomerApiRetry",
-            builder =>
+            }).AddResilienceHandler("CustomerApiRetry", builder =>
             {
                 builder.AddRetry(new HttpRetryStrategyOptions
                 {
@@ -72,6 +71,14 @@ public static class DependencyInjection
                     BackoffType = DelayBackoffType.Exponential,
                     Delay = TimeSpan.FromMilliseconds(200),
                     UseJitter = true
+                });
+
+                builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+                {
+                    FailureRatio = 0.5,
+                    MinimumThroughput = 5,
+                    SamplingDuration = TimeSpan.FromSeconds(10),
+                    BreakDuration = TimeSpan.FromSeconds(10)
                 });
             });
 
