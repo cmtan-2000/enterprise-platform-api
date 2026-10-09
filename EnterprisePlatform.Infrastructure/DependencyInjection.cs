@@ -37,12 +37,12 @@ public static class DependencyInjection
             if (configuration.GetValue<bool>("Database:EnableDetailedLogging"))
             {
                 options.EnableDetailedErrors();
+                options.EnableSensitiveDataLogging();
 
                 options.LogTo(
                     Console.WriteLine,
                     LogLevel.Information);
             }
-            options.EnableSensitiveDataLogging();
         });
 
 

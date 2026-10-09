@@ -1,4 +1,5 @@
 using EnterprisePlatform.Application.Abstractions.Persistence;
+using EnterprisePlatform.Application.Observability;
 using MediatR;
 
 namespace EnterprisePlatform.Application.Features.Customers.GetCustomers;
@@ -16,6 +17,9 @@ public sealed class GetCustomersHandler : IRequestHandler<GetCustomersQuery, Get
         GetCustomersQuery request,
         CancellationToken cancellationToken)
     {
+        using var activity =
+            ApplicationActivitySource.Source.StartActivity("GetCustomers");
+
         return await _customerQueries.GetCustomersAsync(
         request,
         cancellationToken);
