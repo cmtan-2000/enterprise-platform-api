@@ -59,6 +59,17 @@ builder.Services.AddOpenTelemetry()
             .AddPrometheusExporter();
     });
 
+builder.Services.AddMemoryCache();  //  IMemoryCache
+builder.Services.AddStackExchangeRedisCache(options =>      //  Redis + IDistributedCache
+{
+    options.Configuration =
+        builder.Configuration.GetConnectionString("Redis")
+        ?? "localhost:6379";
+
+    options.InstanceName = "EnterprisePlatform:";
+});
+builder.Services.AddHybridCache();  //  HybridCache
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

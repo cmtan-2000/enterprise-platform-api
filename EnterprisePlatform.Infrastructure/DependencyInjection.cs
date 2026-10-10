@@ -15,6 +15,9 @@ using System.Net.Http.Json;
 using Npgsql;
 using Polly;
 using Microsoft.Extensions.Http.Resilience;
+using StackExchange.Redis;
+using EnterprisePlatform.Application.Abstractions.Caching;
+using EnterprisePlatform.Infrastructure.Caching;
 
 namespace EnterprisePlatform.Infrastructure;
 
@@ -24,6 +27,15 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         var builder = new NpgsqlConnectionStringBuilder(connectionString);
+        var redisConnectionString =
+            configuration.GetConnectionString("Redis")
+            ?? "localhost:6379";
+
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(redisConnectionString));
+
+        services.AddSingleton<ICacheInvalidationPublisher, RedisCacheInvalidationPublisher>();
+        services.AddHostedService<RedisCacheInvalidationSubscriber>();
 
         Console.WriteLine(
             $"Npgsql Maximum Pool Size = {builder.MaxPoolSize}");
