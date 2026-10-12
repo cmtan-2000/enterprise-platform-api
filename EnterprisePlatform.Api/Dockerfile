@@ -20,6 +20,9 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
+# Include the AWS RDS CA certificate
+COPY EnterprisePlatform.Api/Certificates/global-bundle.pem /app/Certificates/global-bundle.pem
+
 ENV ASPNETCORE_HTTP_PORTS=8080
 
 EXPOSE 8080
