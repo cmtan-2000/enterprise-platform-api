@@ -16,10 +16,22 @@ public sealed class Order
     {
     }
 
-    public Order(
-        Guid customerId,
-        decimal amount)
+    public Order(Guid customerId, decimal amount)
     {
+        if (customerId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "CustomerId cannot be empty.",
+                nameof(customerId));
+        }
+
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(amount),
+                "Order amount must be greater than zero.");
+        }
+
         Id = Guid.NewGuid();
         CustomerId = customerId;
         Amount = amount;

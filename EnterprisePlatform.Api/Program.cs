@@ -9,6 +9,7 @@ using Npgsql;
 using OpenTelemetry.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
 
 builder.Services.AddControllers();
 
@@ -46,7 +47,7 @@ builder.Services.AddOpenTelemetry()
             .AddSource("EnterprisePlatform.Application")
             .AddOtlpExporter(options =>
             {
-                options.Endpoint = new Uri("http://localhost:4317");
+                options.Endpoint = new Uri(otlpEndpoint);
                 options.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
             });
     })

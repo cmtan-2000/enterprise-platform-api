@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -36,6 +37,13 @@ namespace EnterprisePlatform.Domain.Entities
             string phoneNumber,
             DateTime dateOfBirth)
         {
+            ValidateDetails(
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                dateOfBirth);
+
             Id = Guid.NewGuid();
 
             FirstName = firstName;
@@ -46,6 +54,50 @@ namespace EnterprisePlatform.Domain.Entities
             this.CreatedAt = DateTime.UtcNow;
         }
 
+        private static void ValidateDetails(
+            string firstName,
+            string lastName,
+            string email,
+            string? phoneNumber,
+            DateTime dateOfBirth)
+        {
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                throw new ArgumentException(
+                    "First name is required.",
+                    nameof(firstName));
+            }
+
+            if (string.IsNullOrWhiteSpace(lastName))
+            {
+                throw new ArgumentException(
+                    "Last name is required.",
+                    nameof(lastName));
+            }
+
+            if (string.IsNullOrWhiteSpace(email) ||
+                !new EmailAddressAttribute().IsValid(email))
+            {
+                throw new ArgumentException(
+                    "A valid email address is required.",
+                    nameof(email));
+            }
+
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                throw new ArgumentException(
+                    "Phone number is required.",
+                    nameof(phoneNumber));
+            }
+
+            if (dateOfBirth.Date > DateTime.UtcNow.Date)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(dateOfBirth),
+                    "Date of birth cannot be in the future.");
+            }
+        }
+
         public void UpdateDetails(
             string firstName,
             string lastName,
@@ -53,6 +105,13 @@ namespace EnterprisePlatform.Domain.Entities
             string? phoneNumber,
             DateTime dateOfBirth)
         {
+            ValidateDetails(
+                firstName,
+                lastName,
+                email,
+                phoneNumber,
+                dateOfBirth);
+
             FirstName = firstName;
             LastName = lastName;
             Email = email;

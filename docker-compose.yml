@@ -1,24 +1,61 @@
+name: enterprise-platform-dev
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: EnterprisePlatform.Api/Dockerfile
+    ports:
+      - "5226:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=enterprise_platform;Username=postgres;Password=${POSTGRES_PASSWORD};Maximum Pool Size=5;Timeout=5"
+      ConnectionStrings__Redis: "redis:6379"
+    
+      OpenTelemetry__OtlpEndpoint: "http://jaeger:4317"
+      
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    restart: unless-stopped
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: enterprise_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d enterprise_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   jaeger:
     image: jaegertracing/all-in-one:latest
-    container_name: enterprise-jaeger
     ports:
       - "16686:16686"
       - "4317:4317"
       - "4318:4318"
   prometheus:
       image: prom/prometheus:latest
-      container_name: enterprise-prometheus
       ports:
         - "9090:9090"
       volumes:
         - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      extra_hosts:
-        - "host.docker.internal:host-gateway"
+      depends_on:
+        - api
+      restart: unless-stopped
   grafana:
     image: grafana/grafana:latest
-    container_name: enterprise-grafana
     ports:
       - "3000:3000"
     volumes:
@@ -26,7 +63,6 @@ services:
 
   redis:
     image: redis:7
-    container_name: enterprise-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -40,4 +76,9 @@ services:
       retries: 5
 volumes:
   grafana-data:
+    external: true
+    name: enterpriseplatform_grafana-data
   redis_data:
+  postgres_data:
+    external: true
+    name: 9b334d28b8372e02c395a0219181783ef7cd5d7fe1f8eea3a3530fccc741c76d
