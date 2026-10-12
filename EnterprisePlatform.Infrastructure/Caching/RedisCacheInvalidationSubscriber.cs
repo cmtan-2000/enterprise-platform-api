@@ -14,6 +14,12 @@ public sealed class RedisCacheInvalidationSubscriber : BackgroundService
     private const string ChannelName =
         "EnterprisePlatform:cache-invalidation";
 
+    private static readonly TimeSpan InitialRetryDelay =
+        TimeSpan.FromSeconds(1);
+
+    private static readonly TimeSpan MaxRetryDelay =
+        TimeSpan.FromSeconds(30);
+
     private readonly IConnectionMultiplexer _redis;
     private readonly HybridCache _cache;
     private readonly ILogger<RedisCacheInvalidationSubscriber> _logger;
@@ -36,34 +42,75 @@ public sealed class RedisCacheInvalidationSubscriber : BackgroundService
     {
         var subscriber = _redis.GetSubscriber();
 
-        await subscriber.SubscribeAsync(
-            RedisChannel.Literal(ChannelName),
+        var channel = RedisChannel.Literal(ChannelName);
+
+        Action<RedisChannel, RedisValue> messageHandler =
             (_, message) =>
             {
                 if (!message.IsNullOrEmpty)
                 {
                     _messages.Writer.TryWrite(message.ToString());
                 }
-            });
+            };
 
-        _logger.LogInformation(
-            "Subscribed to Redis cache invalidation channel");
+        var subscribed = false;
+        var retryDelay = InitialRetryDelay;
 
         try
         {
+            // Retry subscription when Redis is temporarily unavailable.
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await subscriber.SubscribeAsync(
+                        channel,
+                        messageHandler);
+
+                    subscribed = true;
+
+                    _logger.LogInformation(
+                        "Subscribed to Redis cache invalidation channel");
+
+                    break;
+                }
+                catch (RedisException ex)
+                    when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Redis subscription failed. Retrying in {RetryDelaySeconds} seconds",
+                        retryDelay.TotalSeconds);
+
+                    await Task.Delay(retryDelay, stoppingToken);
+
+                    retryDelay = TimeSpan.FromSeconds(
+                        Math.Min(
+                            retryDelay.TotalSeconds * 2,
+                            MaxRetryDelay.TotalSeconds));
+                }
+            }
+
+            if (!subscribed)
+            {
+                return;
+            }
+
+            // Process invalidation messages after subscription succeeds.
             await foreach (
                 var payload in _messages.Reader.ReadAllAsync(stoppingToken))
             {
                 try
                 {
                     var message =
-                        JsonSerializer.Deserialize<CustomerCacheInvalidationMessage>(
-                            payload);
+                        JsonSerializer.Deserialize
+                            <CustomerCacheInvalidationMessage>(payload);
 
                     if (message is null)
                     {
                         _logger.LogWarning(
                             "Received invalid cache invalidation message");
+
                         continue;
                     }
 
@@ -81,8 +128,13 @@ public sealed class RedisCacheInvalidationSubscriber : BackgroundService
                         ex,
                         "Failed to deserialize cache invalidation message");
                 }
-                catch (Exception ex) when (
-                    !stoppingToken.IsCancellationRequested)
+                catch (OperationCanceledException)
+                    when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                    when (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogError(
                         ex,
@@ -92,8 +144,23 @@ public sealed class RedisCacheInvalidationSubscriber : BackgroundService
         }
         finally
         {
-            await subscriber.UnsubscribeAsync(
-                RedisChannel.Literal(ChannelName));
+            _messages.Writer.TryComplete();
+
+            if (subscribed)
+            {
+                try
+                {
+                    await subscriber.UnsubscribeAsync(
+                        channel,
+                        messageHandler);
+                }
+                catch (RedisException ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Failed to unsubscribe from Redis during shutdown");
+                }
+            }
         }
     }
 }
